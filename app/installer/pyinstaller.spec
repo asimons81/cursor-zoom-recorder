@@ -8,8 +8,8 @@ hiddenimports = collect_submodules('pynput')
 
 
 _a = Analysis(
-    ['src/main.py'],
-    pathex=['app'],
+    ['../src/main.py'],
+    pathex=['..'],
     binaries=[],
     datas=[],
     hiddenimports=hiddenimports,
