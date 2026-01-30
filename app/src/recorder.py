@@ -34,6 +34,10 @@ class CursorZoomRecorder:
         self._last_ts = time.time()
         self._ripple_events = []  # list of (x, y, t0)
 
+        self._latest_frame = None
+        self._frame_lock = threading.Lock()
+        self._capture_thread = None
+
         cv2.setUseOptimized(True)
 
     def start(self):
@@ -49,6 +53,8 @@ class CursorZoomRecorder:
         self._running = False
         if self._mouse_listener:
             self._mouse_listener.stop()
+        if self._capture_thread:
+            self._capture_thread.join(timeout=2)
         if self._thread:
             self._thread.join(timeout=2)
 
@@ -132,21 +138,38 @@ class CursorZoomRecorder:
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             writer = cv2.VideoWriter(mp4_path, fourcc, self.config.fps, (width, height))
 
+            def capture_loop():
+                while self._running:
+                    if self._paused:
+                        time.sleep(0.005)
+                        continue
+                    img = np.array(sct.grab(monitor))
+                    frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+                    with self._frame_lock:
+                        self._latest_frame = frame
+
+            self._capture_thread = threading.Thread(target=capture_loop, daemon=True)
+            self._capture_thread.start()
+
             frame_interval = 1.0 / self.config.fps
-            next_frame_time = time.time()
+            next_frame_time = time.perf_counter()
 
             while self._running:
                 if self._paused:
                     time.sleep(0.01)
                     continue
-                now = time.time()
+
+                now = time.perf_counter()
                 if now < next_frame_time:
                     time.sleep(max(0, next_frame_time - now))
                     continue
                 next_frame_time += frame_interval
 
-                img = np.array(sct.grab(monitor))
-                frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+                with self._frame_lock:
+                    frame = None if self._latest_frame is None else self._latest_frame.copy()
+
+                if frame is None:
+                    continue
 
                 if self._should_zoom():
                     frame = self._zoom_frame(frame, self._cursor_pos, self.config.zoom)

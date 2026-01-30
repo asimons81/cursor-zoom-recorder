@@ -1,6 +1,6 @@
 import sys
 import os
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, QSpinBox, QDoubleSpinBox, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, QSpinBox, QDoubleSpinBox, QMessageBox, QInputDialog, QGroupBox, QFormLayout
 from PySide6.QtCore import Qt
 
 from recorder import RecorderConfig, CursorZoomRecorder
@@ -21,47 +21,46 @@ class MainWindow(QMainWindow):
 
         root = QWidget()
         layout = QVBoxLayout()
+        layout.setSpacing(14)
 
         title = QLabel("Cursor Zoom Recorder")
-        title.setStyleSheet("font-size: 24px; font-weight: 700;")
+        title.setStyleSheet("font-size: 26px; font-weight: 800;")
+        subtitle = QLabel("Smooth cursor-focused screen recordings")
+        subtitle.setStyleSheet("color: #9aa4b2; margin-bottom: 8px;")
 
-        capture_row = QHBoxLayout()
-        capture_row.addWidget(QLabel("Capture:"))
+        capture_group = QGroupBox("Capture")
+        capture_form = QFormLayout()
         self.capture_combo = QComboBox()
         self.capture_combo.addItems(["Full Screen", "Window", "Region"])
-        capture_row.addWidget(self.capture_combo)
         self.capture_combo.currentTextChanged.connect(self.on_capture_changed)
-        capture_row.addStretch()
+        capture_form.addRow("Source", self.capture_combo)
+        capture_group.setLayout(capture_form)
 
-        zoom_row = QHBoxLayout()
-        zoom_row.addWidget(QLabel("Zoom mode:"))
+        zoom_group = QGroupBox("Zoom")
+        zoom_form = QFormLayout()
         self.zoom_combo = QComboBox()
         self.zoom_combo.addItems(["Always follow", "Click+drag", "Smart (slow-down)"])
-        zoom_row.addWidget(self.zoom_combo)
-
-        zoom_row.addWidget(QLabel("Zoom:"))
         self.zoom_spin = QDoubleSpinBox()
         self.zoom_spin.setRange(1.0, 4.0)
         self.zoom_spin.setSingleStep(0.25)
         self.zoom_spin.setValue(2.0)
-        zoom_row.addWidget(self.zoom_spin)
-        zoom_row.addStretch()
+        zoom_form.addRow("Mode", self.zoom_combo)
+        zoom_form.addRow("Zoom", self.zoom_spin)
+        zoom_group.setLayout(zoom_form)
 
-        output_row = QHBoxLayout()
-        output_row.addWidget(QLabel("Output:"))
+        output_group = QGroupBox("Output")
+        output_form = QFormLayout()
         self.output_combo = QComboBox()
         self.output_combo.addItems(["MP4", "MP4 + GIF"])
-        output_row.addWidget(self.output_combo)
-
-        output_row.addWidget(QLabel("FPS:"))
         self.fps_spin = QSpinBox()
         self.fps_spin.setRange(10, 60)
         self.fps_spin.setValue(30)
-        output_row.addWidget(self.fps_spin)
-        output_row.addStretch()
+        output_form.addRow("Format", self.output_combo)
+        output_form.addRow("FPS", self.fps_spin)
+        output_group.setLayout(output_form)
 
         self.status = QLabel("Status: idle")
-        self.status.setStyleSheet("color: #999;")
+        self.status.setStyleSheet("color: #9aa4b2; padding: 6px 0;")
 
         btn_row = QHBoxLayout()
         self.start_btn = QPushButton("Start")
@@ -78,9 +77,10 @@ class MainWindow(QMainWindow):
         self.pause_btn.clicked.connect(self.toggle_pause)
 
         layout.addWidget(title)
-        layout.addLayout(capture_row)
-        layout.addLayout(zoom_row)
-        layout.addLayout(output_row)
+        layout.addWidget(subtitle)
+        layout.addWidget(capture_group)
+        layout.addWidget(zoom_group)
+        layout.addWidget(output_group)
         layout.addWidget(self.status)
         layout.addLayout(btn_row)
         layout.addStretch()
@@ -156,6 +156,23 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(
+        """
+        QMainWindow { background: #0f1115; }
+        QLabel { color: #e6e6e6; }
+        QGroupBox { border: 1px solid #242b38; border-radius: 10px; margin-top: 8px; padding: 10px; }
+        QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 4px; color: #9aa4b2; }
+        QComboBox, QSpinBox, QDoubleSpinBox {
+            background: #161b24; color: #e6e6e6; border: 1px solid #2a3240;
+            padding: 4px 8px; border-radius: 6px;
+        }
+        QPushButton {
+            background: #2d6cdf; color: white; border: none; padding: 8px 16px; border-radius: 8px;
+        }
+        QPushButton:hover { background: #3a79e8; }
+        QPushButton:disabled { background: #364156; color: #9aa4b2; }
+        """
+    )
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
