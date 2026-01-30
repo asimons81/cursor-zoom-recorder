@@ -1,9 +1,11 @@
 import sys
 import os
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, QSpinBox, QDoubleSpinBox, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, QSpinBox, QDoubleSpinBox, QMessageBox, QInputDialog
 from PySide6.QtCore import Qt
 
 from recorder import RecorderConfig, CursorZoomRecorder
+from region_select import select_region
+from capture import list_windows, get_window_rect
 
 
 class MainWindow(QMainWindow):
@@ -12,6 +14,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Cursor Zoom Recorder")
         self.setMinimumSize(720, 420)
         self.recorder = None
+        self.capture_rect = None
 
         root = QWidget()
         layout = QVBoxLayout()
@@ -24,6 +27,7 @@ class MainWindow(QMainWindow):
         self.capture_combo = QComboBox()
         self.capture_combo.addItems(["Full Screen", "Window", "Region"])
         capture_row.addWidget(self.capture_combo)
+        self.capture_combo.currentTextChanged.connect(self.on_capture_changed)
         capture_row.addStretch()
 
         zoom_row = QHBoxLayout()
@@ -78,6 +82,30 @@ class MainWindow(QMainWindow):
         root.setLayout(layout)
         self.setCentralWidget(root)
 
+    def on_capture_changed(self, value):
+        if value == "Region":
+            rect = select_region()
+            self.capture_rect = rect
+            if rect:
+                self.status.setText(f"Status: region set {rect}")
+        elif value == "Window":
+            windows = list_windows()
+            if not windows:
+                QMessageBox.information(self, "No windows", "No windows detected or pywin32 not available.")
+                self.capture_rect = None
+                return
+            titles = [t for t, _ in windows]
+            title, ok = QInputDialog.getItem(self, "Select window", "Window:", titles, 0, False)
+            if ok and title:
+                rect = get_window_rect(title)
+                if rect:
+                    left, top, right, bottom = rect
+                    self.capture_rect = (left, top, right - left, bottom - top)
+                    self.status.setText(f"Status: window set {title}")
+        else:
+            self.capture_rect = None
+            self.status.setText("Status: idle")
+
     def start_recording(self):
         if self.recorder:
             return
@@ -91,10 +119,12 @@ class MainWindow(QMainWindow):
             zoom=float(self.zoom_spin.value()),
             fps=int(self.fps_spin.value()),
             output_gif=self.output_combo.currentText() == "MP4 + GIF",
+            capture_rect=self.capture_rect,
         )
 
-        if self.capture_combo.currentText() != "Full Screen":
-            QMessageBox.information(self, "Not yet", "Window/Region capture is coming next. Full screen works now.")
+        if self.capture_combo.currentText() != "Full Screen" and not self.capture_rect:
+            QMessageBox.information(self, "Pick a target", "Select a window or region first.")
+            return
 
         self.recorder = CursorZoomRecorder(cfg)
         self.recorder.start()

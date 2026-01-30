@@ -18,6 +18,7 @@ class RecorderConfig:
     output_dir: str = None
     output_gif: bool = False
     highlight: bool = True
+    capture_rect: tuple = None  # (left, top, width, height)
 
 
 class CursorZoomRecorder:
@@ -113,9 +114,13 @@ class CursorZoomRecorder:
         gif_path = os.path.join(output_dir, f"recording-{ts}.gif")
 
         with mss.mss() as sct:
-            monitor = sct.monitors[1]
-            width = monitor['width']
-            height = monitor['height']
+            if self.config.capture_rect:
+                left, top, width, height = self.config.capture_rect
+                monitor = {"left": left, "top": top, "width": width, "height": height}
+            else:
+                monitor = sct.monitors[1]
+                width = monitor['width']
+                height = monitor['height']
 
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             writer = cv2.VideoWriter(mp4_path, fourcc, self.config.fps, (width, height))
