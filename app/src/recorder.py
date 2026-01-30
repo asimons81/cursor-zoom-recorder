@@ -132,8 +132,9 @@ class CursorZoomRecorder:
                 monitor = {"left": left, "top": top, "width": width, "height": height}
             else:
                 monitor = sct.monitors[1]
-                width = monitor['width']
-                height = monitor['height']
+
+            width = monitor['width']
+            height = monitor['height']
 
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             writer = cv2.VideoWriter(mp4_path, fourcc, self.config.fps, (width, height))
