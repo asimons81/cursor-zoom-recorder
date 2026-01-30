@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cursor Zoom Recorder</title>
+    <style>
+      :root { color-scheme: light; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #0b0b0f; color: #fff; }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 72px 20px; }
+      h1 { font-size: 48px; margin: 0 0 12px; }
+      p { font-size: 18px; color: #c9c9d2; }
+      .cta { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+      .btn { background: #6e56cf; color: #fff; padding: 12px 18px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+      .btn.secondary { background: #1b1b25; border: 1px solid #2a2a3a; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 16px; margin-top: 36px; }
+      .card { background: #14141b; padding: 18px; border-radius: 12px; border: 1px solid #222231; }
+      footer { margin-top: 52px; color: #7d7d91; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Cursor Zoom Recorder</h1>
+      <p>Auto‑zoom screen recordings that keep focus on your cursor. Perfect for tutorials, demos, and quick walkthroughs.</p>
+      <div class="cta">
+        <a class="btn" href="#download">Download (soon)</a>
+        <a class="btn secondary" href="https://github.com/asimons81/cursor-zoom-recorder">GitHub</a>
+      </div>
+
+      <div class="grid">
+        <div class="card"><strong>Capture any source</strong><br/>Full screen, window, or region.</div>
+        <div class="card"><strong>3 zoom modes</strong><br/>Always follow, click+drag, or smart.</div>
+        <div class="card"><strong>Clean exports</strong><br/>MP4 + optional GIF with cursor effects.</div>
+        <div class="card"><strong>Hotkeys</strong><br/>Start/stop/pause without hunting buttons.</div>
+      </div>
+
+      <footer id="download">Windows build coming soon. macOS later.</footer>
+    </div>
+  </body>
+</html>
