@@ -31,7 +31,7 @@ jobs:
 
       - name: Package artifact
         run: |
-          powershell Compress-Archive -Path app/installer/dist/CursorZoomRecorder -DestinationPath CursorZoomRecorder-win.zip
+          powershell Compress-Archive -Path app/dist/CursorZoomRecorder -DestinationPath CursorZoomRecorder-win.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
