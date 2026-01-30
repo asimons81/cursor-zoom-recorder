@@ -25,6 +25,7 @@ class CursorZoomRecorder:
     def __init__(self, config: RecorderConfig):
         self.config = config
         self._running = False
+        self._paused = False
         self._thread = None
         self._mouse_listener = None
         self._cursor_pos = (0, 0)
@@ -33,10 +34,13 @@ class CursorZoomRecorder:
         self._last_ts = time.time()
         self._ripple_events = []  # list of (x, y, t0)
 
+        cv2.setUseOptimized(True)
+
     def start(self):
         if self._running:
             return
         self._running = True
+        self._paused = False
         self._start_mouse_listener()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
@@ -47,6 +51,9 @@ class CursorZoomRecorder:
             self._mouse_listener.stop()
         if self._thread:
             self._thread.join(timeout=2)
+
+    def toggle_pause(self):
+        self._paused = not self._paused
 
     def _start_mouse_listener(self):
         def on_move(x, y):
@@ -126,14 +133,17 @@ class CursorZoomRecorder:
             writer = cv2.VideoWriter(mp4_path, fourcc, self.config.fps, (width, height))
 
             frame_interval = 1.0 / self.config.fps
-            last_frame_time = time.time()
+            next_frame_time = time.time()
 
             while self._running:
-                now = time.time()
-                if now - last_frame_time < frame_interval:
-                    time.sleep(0.001)
+                if self._paused:
+                    time.sleep(0.01)
                     continue
-                last_frame_time = now
+                now = time.time()
+                if now < next_frame_time:
+                    time.sleep(max(0, next_frame_time - now))
+                    continue
+                next_frame_time += frame_interval
 
                 img = np.array(sct.grab(monitor))
                 frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)

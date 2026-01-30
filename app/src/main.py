@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from recorder import RecorderConfig, CursorZoomRecorder
 from region_select import select_region
 from capture import list_windows, get_window_rect
+from hotkeys import HotkeyManager
 
 
 class MainWindow(QMainWindow):
@@ -15,6 +16,8 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(720, 420)
         self.recorder = None
         self.capture_rect = None
+        self.hotkeys = HotkeyManager(self.start_recording, self.stop_recording, self.toggle_pause)
+        self.hotkeys.start()
 
         root = QWidget()
         layout = QVBoxLayout()
@@ -63,13 +66,16 @@ class MainWindow(QMainWindow):
         btn_row = QHBoxLayout()
         self.start_btn = QPushButton("Start")
         self.stop_btn = QPushButton("Stop")
+        self.pause_btn = QPushButton("Pause")
         self.stop_btn.setEnabled(False)
         btn_row.addWidget(self.start_btn)
+        btn_row.addWidget(self.pause_btn)
         btn_row.addWidget(self.stop_btn)
         btn_row.addStretch()
 
         self.start_btn.clicked.connect(self.start_recording)
         self.stop_btn.clicked.connect(self.stop_recording)
+        self.pause_btn.clicked.connect(self.toggle_pause)
 
         layout.addWidget(title)
         layout.addLayout(capture_row)
@@ -141,6 +147,11 @@ class MainWindow(QMainWindow):
         self.status.setText(f"Status: saved to {out_dir}")
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
+
+    def toggle_pause(self):
+        if self.recorder:
+            self.recorder.toggle_pause()
+            self.status.setText("Status: paused" if self.recorder._paused else "Status: recording")
 
 
 if __name__ == "__main__":
